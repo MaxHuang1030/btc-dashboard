@@ -450,7 +450,7 @@ def fetch_macro():
     part("dxy", lambda: yahoo("DX-Y.NYB", "10y"), "Yahoo Finance DX-Y.NYB")
 
     def walcl():
-        for code in ("RESPPANWW_N.WW", "WALCL", "RESPPANWW.WW"):
+        for code in ("H0.RESPPANWW_N.WW", "H0.RESPPA_N.WW", "RESPPANWW_N.WW"):
             try:
                 v, name = dbnomics_obs("FED/H41", code)
                 log("  H41 series:", code, name)
