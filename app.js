@@ -58,7 +58,15 @@
     if (onchain) {
       const [pi, p] = lastOf(onchain.price);
       const p30 = onchain.price[pi - 30];
-      add("BTC 價格", usd(p), `${iso(ts(pi))}・30 日 ${pct(p / p30 - 1)}`, "", pricePairs.slice(-180));
+      add("BTC 價格", usd(p), `${iso(ts(pi))} 收盤・30 日 ${pct(p / p30 - 1)}`, "", pricePairs.slice(-180));
+      // live price straight from CoinGecko in the reader's browser (falls back to the daily close)
+      const card = box.lastChild;
+      fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true")
+        .then(r => r.json()).then(j => { const lp = j.bitcoin.usd, ch = j.bitcoin.usd_24h_change / 100;
+          card.querySelector(".k").textContent = "BTC 價格（即時）";
+          card.querySelector(".v").textContent = usd(lp);
+          card.querySelector(".d").textContent = `24 小時 ${pct(ch)}・CoinGecko`;
+          card.querySelector(".d").className = "d " + cls(ch); }).catch(() => {});
       const [zi, z] = lastOf(onchain.mvrvz);
       add("MVRV Z-Score", fmt(z, 2), `${iso(ts(zi))}・30 天前 ${fmt(onchain.mvrvz[zi - 30], 2)}`, "", pairs(onchain.mvrvz).slice(-180));
       const [, s200] = lastOf(onchain.sma200d);
