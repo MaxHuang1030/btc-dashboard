@@ -26,7 +26,7 @@
   const mk = (id) => { const c = echarts.init(document.getElementById(id), null, { renderer: "canvas" }); charts.push(c); return c; };
   window.addEventListener("resize", () => charts.forEach(c => c.resize()));
 
-  const baseAxis = () => ({ axisLine: { lineStyle: { color: C.grid } }, axisLabel: { color: C.muted, fontSize: 11 },
+  const baseAxis = () => ({ axisLine: { lineStyle: { color: C.grid } }, axisLabel: { color: C.muted, fontSize: 11, hideOverlap: true },
                             splitLine: { lineStyle: { color: C.grid } } });
   const tooltip = (valFmt) => ({ trigger: "axis", confine: true, backgroundColor: "#1c2128", borderColor: C.grid,
     textStyle: { color: C.text, fontSize: 12 }, axisPointer: { type: "cross", label: { backgroundColor: "#30363d" } },
@@ -252,7 +252,7 @@
         xAxis: { type: "time", ...baseAxis(), splitLine: { show: false } },
         yAxis: { type: "value", ...baseAxis(), axisLabel: { color: C.muted, fontSize: 11, formatter: (v) => v + "x" } },
         dataZoom: [{ type: "inside" }],
-        series: [{ name: "Strategy mNAV", type: "line", data: dat.mstrMnav.filter(([d]) => d >= "2024-08-08").map(([d, v]) => [Date.parse(d + "T00:00:00Z"), v]), showSymbol: false,
+        series: [{ name: "Strategy mNAV", type: "line", data: (() => { const a = dat.mstrMnav.filter(([d]) => d >= "2024-08-08"); const i = a.findIndex(([, v]) => v >= 1); return a.slice(Math.max(i, 0)); })().map(([d, v]) => [Date.parse(d + "T00:00:00Z"), v]), showSymbol: false,
                    lineStyle: { width: 1.4, color: C.sth }, itemStyle: { color: C.sth },
                    markLine: { silent: true, symbol: "none", lineStyle: { color: C.down, type: "dashed" }, label: { color: C.down, formatter: "1.0x", position: "insideEndTop" }, data: [{ yAxis: 1 }] } }] });
       const mstr = dat.institutions.find(r => r.ticker === "MSTR");
@@ -264,12 +264,12 @@
   // ---------- 7. macro
   const mp = (arr) => (arr || []).map(([d, v]) => [Date.parse(d.length === 7 ? d + "-01" : d), v]);
   const btcSince = fromYear(pricePairs, "2015");
-  function macroDual(id, name, data, color, fmtV) {
+  function macroDual(id, name, data, color, fmtV, axisFmt) {
     const c = mk(id);
     c.setOption({ animation: false, legend: legend(), tooltip: tooltip(fmtV),
       grid: { left: 58, right: 54, top: 34, bottom: 28 },
       xAxis: { type: "time", ...baseAxis(), splitLine: { show: false } },
-      yAxis: [{ type: "value", scale: true, ...baseAxis() },
+      yAxis: [{ type: "value", scale: true, ...baseAxis(), axisLabel: { color: C.muted, fontSize: 11, hideOverlap: true, formatter: axisFmt } },
               { type: "log", ...baseAxis(), splitLine: { show: false }, axisLabel: { color: C.muted, fontSize: 11, formatter: (v) => "$" + v / 1000 + "k" } }],
       series: [{ name, type: "line", data, showSymbol: false, lineStyle: { width: 1.5, color }, itemStyle: { color }, fmt: fmtV },
                { name: "BTC 價格", type: "line", yAxisIndex: 1, data: btcSince, showSymbol: false, sampling: "lttb",
@@ -280,7 +280,7 @@
     // M2 with adjustable lead
     if (macro.m2 && macro.m2.length) {
       const base = mp(macro.m2);
-      const m2c = macroDual("chart-m2", "美國 M2", base, C.d200, (v) => "$" + fmt(v / 1000, 2) + "T");
+      const m2c = macroDual("chart-m2", "美國 M2", base, C.d200, (v) => "$" + fmt(v / 1000, 2) + "T", (v) => "$" + fmt(v / 1000, 0) + "T");
       const lag = document.getElementById("lag"), lv = document.getElementById("lag-val");
       lag.addEventListener("input", () => { lv.textContent = lag.value;
         m2c.setOption({ series: [{ name: `美國 M2（往後移 ${lag.value} 天）`, data: base.map(([t, v]) => [t + lag.value * DAY, v]) }] }); });
@@ -292,7 +292,7 @@
         while (lo <= hi) { const m = (lo + hi) >> 1; if (a[m][0] <= t) { r = a[m][1]; lo = m + 1; } else hi = m - 1; } return r; }; };
       const tg = asof(macro.tga), rr = asof(macro.rrp);
       const nl = macro.fedassets.map(([d, v]) => { const t = Date.parse(d); const a = tg(t), b = rr(t); return [t, a != null ? v - a - (b || 0) : null]; }).filter(p => p[1] != null);
-      macroDual("chart-netliq", "淨流動性", nl, C.sth, (v) => "$" + fmt(v / 1000, 2) + "T");
+      macroDual("chart-netliq", "淨流動性", nl, C.sth, (v) => "$" + fmt(v / 1000, 2) + "T", (v) => "$" + fmt(v / 1000, 1) + "T");
     } else empty("chart-netliq", "聯準會資產負債表資料暫時無法取得，無法計算淨流動性");
 
     const small = (id, arr, color, f) => { if (!arr || !arr.length) return empty(id, "暫時無法取得");
