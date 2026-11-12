@@ -1,0 +1,45 @@
+{
+ "onchain": {
+  "source": "Coin Metrics 社群版 API",
+  "checked": "2026-11-12T21:33+00:00",
+  "ok": true,
+  "updated": "2026-11-12T21:33+00:00",
+  "latest": "2026-11-11"
+ },
+ "lth": {
+  "source": "BGeometrics hodl-waves-supply（≥6 個月幣齡）",
+  "checked": "2026-11-12T21:33+00:00",
+  "ok": true,
+  "updated": "2026-11-12T21:33+00:00",
+  "latest": "2026-11-11"
+ },
+ "bgeometrics": {
+  "source": "BGeometrics 免費 API（延遲 7 天）",
+  "checked": "2026-11-12T21:33+00:00",
+  "ok": true,
+  "updated": "2026-11-12T21:33+00:00",
+  "latest": "2026-11-05"
+ },
+ "etf": {
+  "source": "Farside Investors／DefiLlama",
+  "checked": "2026-11-12T21:33+00:00",
+  "ok": true,
+  "updated": "2026-11-12T21:33+00:00",
+  "latest": "2026-11-12"
+ },
+ "dat": {
+  "source": "DefiLlama Digital Asset Treasuries",
+  "checked": "2026-11-12T21:33+00:00",
+  "ok": true,
+  "updated": "2026-11-12T21:33+00:00",
+  "latest": "2026-11-10"
+ },
+ "macro": {
+  "source": "NY Fed／US Treasury／DBnomics／Yahoo",
+  "checked": "2026-11-12T21:33+00:00",
+  "ok": true,
+  "updated": "2026-11-12T21:33+00:00",
+  "latest": "fedassets✗, m2✗"
+ },
+ "_run": "2026-11-12T21:33+00:00"
+}
