@@ -457,7 +457,21 @@ def fetch_macro():
                 return {k: x / 1000 for k, x in v.items() if k >= "2015"}
             except Exception as e:
                 log("  H41 try", code, e)
-        code, name = dbnomics_find("FED/H41", "total assets", ["total assets", "wednesday level"], avoid=("change", "discontinued", "preferred", "week average", "maturity", "within", "over "))
+        code = name = None
+        hits = []
+        for off in range(0, 20000, 1000):
+            d = get_json(f"{DBN}/series/FED/H41?limit=1000&offset={off}&observations=0", timeout=120)
+            docs = d.get("series", {}).get("docs", [])
+            for x in docs:
+                n = x.get("series_name", "")
+                nl = n.lower()
+                if "total assets" in nl and nl.endswith("wednesday level") and "change" not in nl and "discontinued" not in nl:
+                    hits.append((x["series_code"], n))
+            if len(docs) < 1000: break
+        log("  H41 total-assets hits:", hits[:10])
+        if not hits: raise RuntimeError("no total-assets series in FED/H41")
+        hits.sort(key=lambda h: len(h[1]))  # the plain consolidated total has the shortest name
+        code, name = hits[0]
         log("  H41 series:", code, name)
         v, _ = dbnomics_obs("FED/H41", code)
         return {k: x / 1000 for k, x in v.items() if k >= "2015"}  # USD m -> bn
