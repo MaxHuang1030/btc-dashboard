@@ -413,7 +413,7 @@ def dbnomics_find(dataset, query, must, avoid=("change", "discontinued", "prefer
         nl = name.lower()
         if all(m.lower() in nl for m in must) and not any(a in nl for a in avoid):
             return s["series_code"], name
-    log(f"  {dataset} candidates:", [s.get("series_name") for s in docs[:40]])
+    log(f"  {dataset} candidates:", [(s.get("series_code"), s.get("series_name")) for s in docs[:60]])
     raise RuntimeError(f"no series in {dataset} matching {must}; saw {[s.get('series_name') for s in docs[:8]]}")
 
 
@@ -450,6 +450,13 @@ def fetch_macro():
     part("dxy", lambda: yahoo("DX-Y.NYB", "10y"), "Yahoo Finance DX-Y.NYB")
 
     def walcl():
+        for code in ("RESPPANWW_N.WW", "WALCL", "RESPPANWW.WW"):
+            try:
+                v, name = dbnomics_obs("FED/H41", code)
+                log("  H41 series:", code, name)
+                return {k: x / 1000 for k, x in v.items() if k >= "2015"}
+            except Exception as e:
+                log("  H41 try", code, e)
         code, name = dbnomics_find("FED/H41", "total assets", ["total assets", "wednesday level"], avoid=("change", "discontinued", "preferred", "week average", "maturity", "within", "over "))
         log("  H41 series:", code, name)
         v, _ = dbnomics_obs("FED/H41", code)
@@ -458,6 +465,13 @@ def fetch_macro():
 
     def m2():
         last_err = None
+        for code in ("M2.M", "M2_N.M", "M2_S.M"):
+            try:
+                v, name = dbnomics_obs("FED/H6_H6_M2", code)
+                log("  M2 series:", code, name)
+                return {k: x for k, x in v.items() if k >= "2015"}
+            except Exception as e:
+                log("  m2 code try", code, e)
         for ds in ("FED/H6_H6_M2",):
             try:
                 code, name = dbnomics_find(ds, "M2", ["m2", "seasonally adjusted"], avoid=("not seasonally", "percent", "change", "weekly", "week"))
