@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>比特幣週期儀表板</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>比特幣週期儀表板</h1>
+    <p class="sub">週期級別持有用的客觀數據，每天自動更新。<span id="updated"></span></p>
+  </div>
+</header>
+
+<main>
+  <section id="overview">
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="main-chart-sec">
+    <div class="sec-head">
+      <h2>價格與成本線</h2>
+      <div class="ranges" data-target="main">
+        <button data-range="365">1 年</button><button data-range="1461" class="on">4 年</button><button data-range="0">全部</button>
+      </div>
+    </div>
+    <p class="note">對數座標。點圖例可開關各條線；已實現價格預設隱藏（包含遺失幣，成本偏低）。</p>
+    <div class="chart tall" id="chart-main"></div>
+    <h3>MVRV Z-Score</h3>
+    <div class="chart" id="chart-mvrv"></div>
+  </section>
+
+  <section id="holders-sec">
+    <h2>籌碼行為</h2>
+    <div class="grid2">
+      <div><h3 id="lth-title">長期持有者供給</h3><div class="chart" id="chart-lth"></div><p class="note" id="lth-note"></p></div>
+      <div><h3>交易所餘額</h3><div class="chart" id="chart-exch"></div><p class="note" id="exch-note"></p></div>
+    </div>
+  </section>
+
+  <section id="etf-sec">
+    <div class="sec-head">
+      <h2>現貨 ETF 資金流</h2>
+      <div class="ranges" data-target="etf">
+        <button data-range="90">3 個月</button><button data-range="365" class="on">1 年</button><button data-range="0">全部</button>
+      </div>
+    </div>
+    <div class="chart tall" id="chart-etf"></div>
+    <div class="table-wrap"><table id="etf-table"></table></div>
+  </section>
+
+  <section id="dat-sec">
+    <h2>DAT 企業金庫</h2>
+    <h3>持幣變化（每週淨增減，BTC）</h3>
+    <div class="chart" id="chart-dat"></div>
+    <p class="note" id="dat-note"></p>
+    <h3>持幣前 10 大</h3>
+    <div class="table-wrap"><table id="dat-table"></table></div>
+    <h3>Strategy 持幣與 mNAV</h3>
+    <div class="chart" id="chart-mstr"></div>
+    <p class="note" id="mstr-note"></p>
+  </section>
+
+  <section id="macro-sec">
+    <h2>總經流動性</h2>
+    <div class="sec-head">
+      <h3 id="m2-title">美國 M2 vs BTC</h3>
+      <label class="lag">M2 領先 <input type="range" id="lag" min="0" max="180" step="10" value="0"> <b id="lag-val">0</b> 天</label>
+    </div>
+    <div class="chart" id="chart-m2"></div>
+    <h3>美國淨流動性 vs BTC</h3>
+    <p class="note">聯準會資產負債表 − 財政部 TGA − 逆回購（RRP）。</p>
+    <div class="chart" id="chart-netliq"></div>
+    <div class="grid3">
+      <div><h3>聯邦基金利率</h3><div class="chart small" id="chart-ff"></div></div>
+      <div><h3>10 年期實質利率</h3><div class="chart small" id="chart-real"></div></div>
+      <div><h3>美元指數 DXY</h3><div class="chart small" id="chart-dxy"></div></div>
+    </div>
+  </section>
+
+  <section id="sources">
+    <h2>資料來源與更新狀態</h2>
+    <div class="table-wrap"><table id="status-table"></table></div>
+    <p class="note">本頁只呈現數據，不構成投資建議。</p>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
