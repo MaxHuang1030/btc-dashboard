@@ -272,6 +272,8 @@ def fetch_etf():
         except ValueError:
             continue  # Total / Average / etc.
         vals = {c: parse_num(v) for c, v in zip(cols[1:], cells[1:])}
+        if all(vals.get(c) is None for c in cols[1:] if c.lower() != "total"):
+            continue  # today's row before Farside fills it in
         rows.append({"date": d, **vals})
     if not rows:
         raise RuntimeError("no rows parsed from Farside")
@@ -397,13 +399,15 @@ def treasury_real10(y0=2015):
 DBN = "https://api.db.nomics.world/v22"
 
 
-def dbnomics_find(dataset, query, must):
-    d = get_json(f"{DBN}/series/{dataset}?" + urllib.parse.urlencode({"q": query, "limit": 50, "observations": 0}), timeout=90)
+def dbnomics_find(dataset, query, must, avoid=("change", "discontinued", "preferred")):
+    d = get_json(f"{DBN}/series/{dataset}?" + urllib.parse.urlencode({"q": query, "limit": 200, "observations": 0}), timeout=90)
     docs = d.get("series", {}).get("docs", [])
     for s in docs:
         name = s.get("series_name", "")
-        if all(m.lower() in name.lower() for m in must):
+        nl = name.lower()
+        if all(m.lower() in nl for m in must) and not any(a in nl for a in avoid):
             return s["series_code"], name
+    log(f"  {dataset} candidates:", [s.get("series_name") for s in docs[:40]])
     raise RuntimeError(f"no series in {dataset} matching {must}; saw {[s.get('series_name') for s in docs[:8]]}")
 
 
@@ -437,10 +441,10 @@ def fetch_macro():
     part("rrp", nyfed_rrp, "紐約聯準會逆回購")
     part("tga", tga, "美國財政部 Daily Treasury Statement")
     part("real10", treasury_real10, "美國財政部實質殖利率曲線")
-    part("dxy", lambda: yahoo("DX-Y.NYB"), "Yahoo Finance DX-Y.NYB")
+    part("dxy", lambda: yahoo("DX-Y.NYB", "10y"), "Yahoo Finance DX-Y.NYB")
 
     def walcl():
-        code, name = dbnomics_find("FED/H41", "total assets wednesday level", ["total assets", "wednesday"])
+        code, name = dbnomics_find("FED/H41", "total assets eliminations consolidation wednesday level", ["total assets", "eliminations", "wednesday level"])
         log("  H41 series:", code, name)
         v, _ = dbnomics_obs("FED/H41", code)
         return {k: x / 1000 for k, x in v.items() if k >= "2015"}  # USD m -> bn
@@ -448,13 +452,14 @@ def fetch_macro():
 
     def m2():
         last_err = None
-        for ds in ("FED/H6", "FED/H6_H6", "FED/H6.H6"):
+        for ds in ("FED/H6_H6", "FED/H6"):
             try:
-                code, name = dbnomics_find(ds, "M2 seasonally adjusted", ["m2"])
+                code, name = dbnomics_find(ds, "M2 seasonally adjusted monthly", ["m2", "seasonally adjusted", "monthly"], avoid=("not seasonally", "percent", "change", "weekly"))
                 log("  M2 series:", ds, code, name)
                 v, _ = dbnomics_obs(ds, code)
                 return {k: x for k, x in v.items() if k >= "2015"}
             except Exception as e:
+                log('  m2 try', ds, e)
                 last_err = e
         # list FED datasets to help debugging
         try:
