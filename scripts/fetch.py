@@ -211,6 +211,12 @@ def fetch_onchain():
 
 
 def fetch_bgeometrics():
+    last_ok = status.get("bgeometrics", {}).get("updated")
+    if last_ok and os.environ.get("FORCE_BG") != "1" and \
+            NOW - datetime.fromisoformat(last_ok) < timedelta(hours=20):
+        log("  bgeometrics refreshed recently; skipping to respect the free-plan limit")
+        prev = load("onchain.json")
+        return max(prev["sth_map"]) if prev and prev.get("sth_map") else None
     prev = load("onchain.json")
     if not prev:
         raise RuntimeError("onchain.json missing")
@@ -444,7 +450,7 @@ def fetch_macro():
     part("dxy", lambda: yahoo("DX-Y.NYB", "10y"), "Yahoo Finance DX-Y.NYB")
 
     def walcl():
-        code, name = dbnomics_find("FED/H41", "total assets eliminations consolidation wednesday level", ["total assets", "eliminations", "wednesday level"])
+        code, name = dbnomics_find("FED/H41", "total assets", ["total assets", "wednesday level"], avoid=("change", "discontinued", "preferred", "week average", "maturity", "within", "over "))
         log("  H41 series:", code, name)
         v, _ = dbnomics_obs("FED/H41", code)
         return {k: x / 1000 for k, x in v.items() if k >= "2015"}  # USD m -> bn
@@ -452,9 +458,9 @@ def fetch_macro():
 
     def m2():
         last_err = None
-        for ds in ("FED/H6_H6", "FED/H6"):
+        for ds in ("FED/H6_H6_M2",):
             try:
-                code, name = dbnomics_find(ds, "M2 seasonally adjusted monthly", ["m2", "seasonally adjusted", "monthly"], avoid=("not seasonally", "percent", "change", "weekly"))
+                code, name = dbnomics_find(ds, "M2", ["m2", "seasonally adjusted"], avoid=("not seasonally", "percent", "change", "weekly", "week"))
                 log("  M2 series:", ds, code, name)
                 v, _ = dbnomics_obs(ds, code)
                 return {k: x for k, x in v.items() if k >= "2015"}
